@@ -13,7 +13,6 @@
     --muted2:#9ca3af;
     --border:#e5e7eb;
     --shadow:0 14px 30px rgba(17,24,39,.08);
-    --shadow2:0 8px 18px rgba(17,24,39,.06);
     --accent:#2563eb;
     --accentBg:#eef2ff;
     --danger:#b91c1c;
@@ -38,11 +37,12 @@
   }
   h1{margin:0;font-size:30px;font-weight:750;letter-spacing:.2px}
   .sub{margin:6px 0 0;color:var(--muted);line-height:1.45;max-width:72ch}
+
   .chip{
     display:inline-flex;align-items:center;gap:8px;
     padding:10px 12px;border:1px solid var(--border);border-radius:999px;
     background:rgba(255,255,255,.75);
-    box-shadow:var(--shadow2);
+    box-shadow:0 8px 18px rgba(17,24,39,.06);
     font-size:13px;color:var(--muted);
     white-space:nowrap;
   }
@@ -108,10 +108,7 @@
     color:#fff;
   }
   .btn.primary:hover{filter:brightness(.98)}
-  .btn:disabled{
-    opacity:.55;
-    cursor:not-allowed;
-  }
+  .btn:disabled{opacity:.55;cursor:not-allowed}
 
   .metaRow{
     padding:0 18px 16px;
@@ -208,8 +205,8 @@
     <div>
       <h1>Pallet Locator</h1>
       <p class="sub">
-        Search pallets across locations (dock / receive / p2 / p3 / p4).<br>
-        Search starts only when you type <strong>more than 5 characters</strong>.
+        Type a pallet ID/name. Results update <strong>5 seconds after you stop typing</strong>.
+        Duplicate pallets (same value in multiple places) are flagged.
       </p>
     </div>
     <div class="chip" title="Data status">
@@ -221,20 +218,20 @@
   <div class="card">
     <div class="controls">
       <div class="searchWrap">
-        <input id="q" class="input" placeholder="Enter pallet ID/name (6+ chars)..." autocomplete="off" />
-        <div class="kbdHint">Enter</div>
+        <input id="q" class="input" placeholder="Enter pallet ID/name…" autocomplete="off" />
+        <div class="kbdHint">wait 5s</div>
       </div>
       <button id="loadBtn" class="btn" type="button">Load data</button>
-      <button id="searchBtn" class="btn primary" type="button" disabled>Search</button>
+      <button id="refreshBtn" class="btn primary" type="button" disabled>Refresh search</button>
     </div>
 
     <div class="metaRow">
-      <div id="metaLeft">Rows: — • Columns: —</div>
-      <div id="metaRight">No auto-refresh</div>
+      <div id="metaLeft">Rows: —</div>
+      <div id="metaRight">No auto sheet refresh</div>
     </div>
 
     <div id="notice" class="notice">
-      Click <strong>Load data</strong> first. Then type a pallet (6+ chars) and press <strong>Enter</strong>.
+      Click <strong>Load data</strong> first.
     </div>
 
     <div class="results">
@@ -247,11 +244,11 @@
 </div>
 
 <script>
-  // Full published CSV link
   const CSV_URL =
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vRx6iH6_NCeeLOFF_FqLqMf-OPW2WqNpwV19Ti_xLA-RcHyKkYaQk4X0Xz1CJ8JvA/pub?output=csv";
 
-  const MIN_LEN = 6; // "higher then 5 strings" => 6+ chars
+  const SEARCH_DELAY_MS = 5000;  // wait 5 seconds after typing
+  const MAX_SHOW = 200;          // can handle 50+ easily; we display up to 200
 
   const dot = document.getElementById("dot");
   const statusEl = document.getElementById("status");
@@ -260,24 +257,25 @@
   const list = document.getElementById("list");
   const input = document.getElementById("q");
   const loadBtn = document.getElementById("loadBtn");
-  const searchBtn = document.getElementById("searchBtn");
+  const refreshBtn = document.getElementById("refreshBtn");
 
   let headers = [];
   let rows = [];
   let loaded = false;
   let lastLoadedAt = null;
 
+  let typingTimer = null;
+  let pendingSearch = false;
+
   function setStatus(kind, text){
     statusEl.textContent = text;
     dot.className = "dot " + (kind || "wait");
   }
-
   function escapeHtml(str){
     return String(str).replace(/[&<>"']/g, (m)=>({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
     }[m]));
   }
-
   function fmtTime(d){
     return d.toLocaleString(undefined, { year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit" });
   }
@@ -316,7 +314,7 @@
     setStatus("wait", "Loading…");
     notice.className = "notice";
     notice.innerHTML = "Loading data from sheet…";
-    list.innerHTML = "";
+    // keep existing results; don’t clear list here
 
     const res = await fetch(CSV_URL, { cache: "no-store" });
     if (!res.ok) throw new Error(`Fetch failed (${res.status})`);
@@ -330,24 +328,18 @@
     loaded = true;
     lastLoadedAt = new Date();
 
-    metaLeft.textContent =
-      `Rows: ${rows.length.toLocaleString()} • Columns: ${headers.length.toLocaleString()} • Loaded: ${fmtTime(lastLoadedAt)}`;
+    metaLeft.textContent = `Rows: ${rows.length.toLocaleString()} • Loaded: ${fmtTime(lastLoadedAt)}`;
     setStatus("ok", "Loaded");
-    updateSearchButton();
+    refreshBtn.disabled = false;
 
     notice.className = "notice";
-    notice.innerHTML = `Data loaded. Type a pallet (6+ chars) and press <strong>Enter</strong> or click <strong>Search</strong>.`;
-  }
-
-  function updateSearchButton(){
-    const q = normalize(input.value);
-    searchBtn.disabled = !(loaded && q.length >= MIN_LEN);
+    notice.innerHTML = `Loaded. Start typing to search (results refresh after <strong>5 seconds</strong>).`;
   }
 
   function findMatches(query){
     const q = normalize(query);
     const qLower = q.toLowerCase();
-    if (!q || q.length < MIN_LEN) return [];
+    if (!q) return [];
 
     const matches = [];
     for (let r = 0; r < rows.length; r++){
@@ -355,8 +347,6 @@
       for (let c = 0; c < headers.length; c++){
         const cell = normalize(row[c]);
         if (!cell) continue;
-
-        // Partial match search (keeps UX forgiving). If you want exact only, I’ll change it.
         if (cell.toLowerCase().includes(qLower)){
           matches.push({
             pallet: cell,
@@ -378,9 +368,7 @@
     return map;
   }
 
-  function render(){
-    list.innerHTML = "";
-
+  function renderNow(){
     if (!loaded){
       notice.className = "notice";
       notice.innerHTML = `Click <strong>Load data</strong> first.`;
@@ -389,11 +377,10 @@
 
     const q = normalize(input.value);
 
-    if (q.length < MIN_LEN){
+    if (!q){
+      // Don’t clear results abruptly; just tell user what’s going on
       notice.className = "notice";
-      notice.innerHTML =
-        `Type at least <strong>${MIN_LEN}</strong> characters to search. ` +
-        `<span style="color:var(--muted)">(${q.length}/${MIN_LEN})</span>`;
+      notice.innerHTML = `Type a pallet to search. Results refresh after <strong>5 seconds</strong>.`;
       return;
     }
 
@@ -404,15 +391,16 @@
     if (matches.length === 0){
       notice.className = "notice";
       notice.innerHTML = `<strong>No match</strong> for “${escapeHtml(q)}”.`;
+      list.innerHTML = "";
       return;
     }
 
     if (hasDup){
       notice.className = "notice danger";
-      notice.innerHTML = `<strong>Duplicate detected.</strong> The same pallet appears in multiple locations.`;
+      notice.innerHTML = `<strong>Duplicate detected.</strong> Same pallet appears in multiple locations.`;
     } else {
       notice.className = "notice warn";
-      notice.innerHTML = `<strong>${matches.length}</strong> match(es) found for “${escapeHtml(q)}”.`;
+      notice.innerHTML = `<strong>${matches.length}</strong> match(es) for “${escapeHtml(q)}”.`;
     }
 
     // Sort duplicates first
@@ -424,7 +412,10 @@
       return a.rowNumber - b.rowNumber;
     });
 
-    for (const m of matches.slice(0, 80)){
+    const show = matches.slice(0, MAX_SHOW);
+
+    list.innerHTML = "";
+    for (const m of show){
       const dupN = dups.get(m.pallet.toLowerCase()) || 0;
 
       const el = document.createElement("div");
@@ -444,15 +435,29 @@
       list.appendChild(el);
     }
 
-    if (matches.length > 80){
+    if (matches.length > MAX_SHOW){
       const more = document.createElement("div");
       more.className = "notice";
-      more.textContent = `Showing first 80 results. Narrow your search to see fewer matches.`;
+      more.textContent = `Showing first ${MAX_SHOW} results. Narrow your search to see fewer.`;
       list.appendChild(more);
     }
   }
 
-  // Events
+  function scheduleSearch(){
+    if (!loaded) return;
+
+    // Keep results visible while typing; only update notice.
+    pendingSearch = true;
+    notice.className = "notice";
+    notice.innerHTML = `Typing… will refresh results in <strong>5 seconds</strong> after you stop.`;
+
+    if (typingTimer) clearTimeout(typingTimer);
+    typingTimer = setTimeout(() => {
+      pendingSearch = false;
+      renderNow();
+    }, SEARCH_DELAY_MS);
+  }
+
   loadBtn.addEventListener("click", async () => {
     try{
       await loadSheet();
@@ -465,30 +470,18 @@
     }
   });
 
-  input.addEventListener("input", () => {
-    updateSearchButton();
-    // Don’t auto-search; UX is calmer. (User hits Enter or clicks Search.)
-    if (!loaded) return;
-    const q = normalize(input.value);
-    if (q.length < MIN_LEN){
-      list.innerHTML = "";
-      notice.className = "notice";
-      notice.innerHTML = `Type at least <strong>${MIN_LEN}</strong> characters to search. <span style="color:var(--muted)">(${q.length}/${MIN_LEN})</span>`;
-    }
-  });
+  // Debounced search: wait 5 seconds after typing stops
+  input.addEventListener("input", scheduleSearch);
 
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter"){
-      e.preventDefault();
-      if (!searchBtn.disabled) render();
-    }
+  // Manual refresh search button (instant)
+  refreshBtn.addEventListener("click", () => {
+    if (typingTimer) clearTimeout(typingTimer);
+    pendingSearch = false;
+    renderNow();
   });
-
-  searchBtn.addEventListener("click", render);
 
   // Initial state
   setStatus("wait", "Not loaded");
-  updateSearchButton();
 </script>
 </body>
 </html>
