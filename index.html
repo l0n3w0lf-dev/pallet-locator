@@ -6,19 +6,21 @@
 <title>Pallet Locator</title>
 <style>
   :root{
-    --bg:#f3f5f7;
+    --bg:#f4f6f8;
     --card:#ffffff;
-    --text:#1f2937;
+    --text:#111827;
     --muted:#6b7280;
+    --muted2:#9ca3af;
     --border:#e5e7eb;
-    --shadow:0 10px 25px rgba(0,0,0,.06);
-    --accent:#2563eb;         /* soft blue */
-    --accentBg:#eff6ff;
-    --warn:#b45309;           /* amber */
-    --warnBg:#fffbeb;
-    --danger:#b91c1c;         /* red */
+    --shadow:0 14px 30px rgba(17,24,39,.08);
+    --shadow2:0 8px 18px rgba(17,24,39,.06);
+    --accent:#2563eb;
+    --accentBg:#eef2ff;
+    --danger:#b91c1c;
     --dangerBg:#fef2f2;
-    --radius:14px;
+    --warn:#92400e;
+    --warnBg:#fffbeb;
+    --radius:16px;
   }
 
   *{box-sizing:border-box}
@@ -28,19 +30,21 @@
     background:var(--bg);
     color:var(--text);
   }
+
   .wrap{max-width:980px;margin:44px auto;padding:0 18px}
   header{
-    display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
-    margin-bottom:16px;
+    display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+    margin-bottom:18px;
   }
-  h1{margin:0;font-size:28px;font-weight:700;letter-spacing:.2px}
-  .sub{margin:6px 0 0;color:var(--muted);line-height:1.35;max-width:70ch}
-  .badge{
+  h1{margin:0;font-size:30px;font-weight:750;letter-spacing:.2px}
+  .sub{margin:6px 0 0;color:var(--muted);line-height:1.45;max-width:72ch}
+  .chip{
     display:inline-flex;align-items:center;gap:8px;
     padding:10px 12px;border:1px solid var(--border);border-radius:999px;
-    background:rgba(255,255,255,.7);
-    box-shadow:0 6px 16px rgba(0,0,0,.05);
-    font-size:13px;color:var(--muted);white-space:nowrap;
+    background:rgba(255,255,255,.75);
+    box-shadow:var(--shadow2);
+    font-size:13px;color:var(--muted);
+    white-space:nowrap;
   }
   .dot{width:9px;height:9px;border-radius:50%}
   .dot.ok{background:#16a34a}
@@ -54,78 +58,105 @@
     box-shadow:var(--shadow);
     overflow:hidden;
   }
+
   .controls{
-    padding:16px;
+    padding:18px;
     display:flex;
     flex-wrap:wrap;
     gap:12px;
     align-items:center;
   }
 
+  .searchWrap{flex:1 1 420px;min-width:260px;position:relative}
   .input{
-    flex:1 1 320px;
-    min-width:240px;
-    padding:12px 14px;
+    width:100%;
+    padding:13px 44px 13px 14px;
     border:1px solid var(--border);
-    border-radius:12px;
+    border-radius:14px;
     font-size:16px;
     outline:none;
     background:#fff;
+    transition: box-shadow .15s ease, border-color .15s ease;
   }
-  .input:focus{border-color:#c7d2fe;box-shadow:0 0 0 4px rgba(37,99,235,.10)}
+  .input:focus{
+    border-color:#c7d2fe;
+    box-shadow:0 0 0 4px rgba(37,99,235,.12);
+  }
+  .kbdHint{
+    position:absolute;right:10px;top:50%;transform:translateY(-50%);
+    font-size:12px;color:var(--muted2);
+    border:1px solid var(--border);
+    background:#fafafa;
+    padding:4px 8px;border-radius:10px;
+    user-select:none;
+  }
+
   .btn{
     padding:12px 14px;
-    border-radius:12px;
+    border-radius:14px;
     border:1px solid var(--border);
     background:#fff;
     cursor:pointer;
-    font-weight:600;
+    font-weight:650;
+    transition: transform .06s ease, background .15s ease;
   }
   .btn:hover{background:#fafafa}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+  .btn.primary:hover{filter:brightness(.98)}
+  .btn:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+  }
 
-  .row{
-    padding:0 16px 14px;
+  .metaRow{
+    padding:0 18px 16px;
     display:flex;
-    flex-wrap:wrap;
-    align-items:center;
     justify-content:space-between;
+    flex-wrap:wrap;
     gap:10px;
     color:var(--muted);
     font-size:13px;
   }
 
   .notice{
-    margin:0 16px 16px;
+    margin:0 18px 18px;
     padding:12px 12px;
-    border-radius:12px;
+    border-radius:14px;
     border:1px solid var(--border);
     background:#fafafa;
     color:var(--muted);
+    line-height:1.4;
     font-size:14px;
-    line-height:1.35;
   }
   .notice strong{color:var(--text)}
-  .notice.warn{border-color:#fcd34d;background:var(--warnBg);color:#7c2d12}
+  .notice.warn{border-color:#fde68a;background:var(--warnBg);color:#7c2d12}
   .notice.danger{border-color:#fecaca;background:var(--dangerBg);color:#7f1d1d}
 
-  .results{
-    padding:0 16px 18px;
-  }
-  .sectionTitle{
+  .results{padding:0 18px 20px}
+  .title{
     margin:18px 0 10px;
     font-size:14px;
-    font-weight:700;
+    font-weight:750;
     color:#111827;
   }
 
   .list{
     display:grid;
-    grid-template-columns:1fr;
+    grid-template-columns: 1fr;
     gap:10px;
   }
+  @media (min-width: 860px){
+    .list{grid-template-columns: 1fr 1fr;}
+  }
+
   .item{
     border:1px solid var(--border);
-    border-radius:12px;
+    border-radius:14px;
     padding:12px;
     background:#fff;
   }
@@ -134,8 +165,9 @@
     margin-bottom:6px;
   }
   .pallet{
-    font-weight:750;
+    font-weight:800;
     font-size:15px;
+    word-break:break-word;
   }
   .pill{
     font-size:12px;
@@ -146,6 +178,12 @@
     color:#1e40af;
     white-space:nowrap;
   }
+  .pill.dup{
+    background:var(--dangerBg);
+    border-color:#fecaca;
+    color:#991b1b;
+  }
+
   .meta{
     color:var(--muted);
     font-size:13px;
@@ -155,12 +193,6 @@
     line-height:1.35;
   }
   .meta b{color:#111827}
-
-  .dupPill{
-    background:var(--dangerBg);
-    border-color:#fecaca;
-    color:#991b1b;
-  }
 
   footer{
     text-align:center;
@@ -176,33 +208,37 @@
     <div>
       <h1>Pallet Locator</h1>
       <p class="sub">
-        Type a pallet ID/name to find where it is. The sheet refreshes automatically every <strong>5 seconds</strong>.
-        If the same pallet appears in multiple places, it will be flagged as a <strong>duplicate</strong>.
+        Search pallets across locations (dock / receive / p2 / p3 / p4).<br>
+        Search starts only when you type <strong>more than 5 characters</strong>.
       </p>
     </div>
-    <div class="badge" title="Data status">
+    <div class="chip" title="Data status">
       <span class="dot wait" id="dot"></span>
-      <span id="status">Loading…</span>
+      <span id="status">Not loaded</span>
     </div>
   </header>
 
   <div class="card">
     <div class="controls">
-      <input id="q" class="input" placeholder="Search pallet (e.g. PAL12345)..." autocomplete="off" />
-      <button id="refresh" class="btn" type="button">Refresh now</button>
+      <div class="searchWrap">
+        <input id="q" class="input" placeholder="Enter pallet ID/name (6+ chars)..." autocomplete="off" />
+        <div class="kbdHint">Enter</div>
+      </div>
+      <button id="loadBtn" class="btn" type="button">Load data</button>
+      <button id="searchBtn" class="btn primary" type="button" disabled>Search</button>
     </div>
 
-    <div class="row">
-      <div id="metaLeft">—</div>
-      <div>Auto refresh: every 5s</div>
+    <div class="metaRow">
+      <div id="metaLeft">Rows: — • Columns: —</div>
+      <div id="metaRight">No auto-refresh</div>
     </div>
 
     <div id="notice" class="notice">
-      Type a pallet to search.
+      Click <strong>Load data</strong> first. Then type a pallet (6+ chars) and press <strong>Enter</strong>.
     </div>
 
     <div class="results">
-      <div class="sectionTitle">Results</div>
+      <div class="title">Results</div>
       <div class="list" id="list"></div>
     </div>
   </div>
@@ -211,8 +247,11 @@
 </div>
 
 <script>
+  // Full published CSV link
   const CSV_URL =
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vRx6iH6_NCeeLOFF_FqLqMf-OPW2WqNpwV19Ti_xLA-RcHyKkYaQk4X0Xz1CJ8JvA/pub?output=csv";
+
+  const MIN_LEN = 6; // "higher then 5 strings" => 6+ chars
 
   const dot = document.getElementById("dot");
   const statusEl = document.getElementById("status");
@@ -220,10 +259,12 @@
   const notice = document.getElementById("notice");
   const list = document.getElementById("list");
   const input = document.getElementById("q");
-  const refreshBtn = document.getElementById("refresh");
+  const loadBtn = document.getElementById("loadBtn");
+  const searchBtn = document.getElementById("searchBtn");
 
   let headers = [];
   let rows = [];
+  let loaded = false;
   let lastLoadedAt = null;
 
   function setStatus(kind, text){
@@ -231,7 +272,17 @@
     dot.className = "dot " + (kind || "wait");
   }
 
-  // Robust-ish CSV parser (handles commas + quotes)
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, (m)=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
+  }
+
+  function fmtTime(d){
+    return d.toLocaleString(undefined, { year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+  }
+
+  // Robust-ish CSV parser (quotes + commas)
   function parseCSV(text){
     const out = [];
     let row = [], cur = "", inQuotes = false;
@@ -255,38 +306,48 @@
     }
     row.push(cur);
     out.push(row);
-    // Remove trailing empty lines
+
     return out.filter(r => r.some(cell => (cell ?? "").toString().trim() !== ""));
   }
 
-  function fmtTime(d){
-    return d.toLocaleString(undefined, { year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit" });
-  }
+  function normalize(s){ return (s ?? "").toString().trim(); }
 
   async function loadSheet(){
-    setStatus("wait", "Refreshing…");
+    setStatus("wait", "Loading…");
+    notice.className = "notice";
+    notice.innerHTML = "Loading data from sheet…";
+    list.innerHTML = "";
+
     const res = await fetch(CSV_URL, { cache: "no-store" });
     if (!res.ok) throw new Error(`Fetch failed (${res.status})`);
 
     const csv = await res.text();
     const grid = parseCSV(csv);
 
-    headers = (grid[0] || []).map(h => (h ?? "").toString().trim());
+    headers = (grid[0] || []).map(h => normalize(h));
     rows = grid.slice(1);
 
+    loaded = true;
     lastLoadedAt = new Date();
-    metaLeft.textContent = `Rows: ${rows.length.toLocaleString()} • Columns: ${headers.length.toLocaleString()} • Last update: ${fmtTime(lastLoadedAt)}`;
 
-    setStatus("ok", "Up to date");
+    metaLeft.textContent =
+      `Rows: ${rows.length.toLocaleString()} • Columns: ${headers.length.toLocaleString()} • Loaded: ${fmtTime(lastLoadedAt)}`;
+    setStatus("ok", "Loaded");
+    updateSearchButton();
+
+    notice.className = "notice";
+    notice.innerHTML = `Data loaded. Type a pallet (6+ chars) and press <strong>Enter</strong> or click <strong>Search</strong>.`;
   }
 
-  function normalize(s){
-    return (s ?? "").toString().trim();
+  function updateSearchButton(){
+    const q = normalize(input.value);
+    searchBtn.disabled = !(loaded && q.length >= MIN_LEN);
   }
 
-  function findAllMatches(query){
-    const q = normalize(query).toLowerCase();
-    if (!q) return [];
+  function findMatches(query){
+    const q = normalize(query);
+    const qLower = q.toLowerCase();
+    if (!q || q.length < MIN_LEN) return [];
 
     const matches = [];
     for (let r = 0; r < rows.length; r++){
@@ -294,7 +355,9 @@
       for (let c = 0; c < headers.length; c++){
         const cell = normalize(row[c]);
         if (!cell) continue;
-        if (cell.toLowerCase().includes(q)){
+
+        // Partial match search (keeps UX forgiving). If you want exact only, I’ll change it.
+        if (cell.toLowerCase().includes(qLower)){
           matches.push({
             pallet: cell,
             columnHeader: headers[c] || `Column ${c+1}`,
@@ -306,64 +369,70 @@
     return matches;
   }
 
-  function countDuplicates(matches){
-    // duplicates by exact pallet text (case-insensitive)
+  function duplicateCounts(matches){
     const map = new Map();
     for (const m of matches){
       const key = m.pallet.toLowerCase();
       map.set(key, (map.get(key) || 0) + 1);
     }
-    return map; // palletLower -> count
+    return map;
   }
 
   function render(){
-    const q = input.value;
     list.innerHTML = "";
 
-    const trimmed = normalize(q);
-    if (!trimmed){
+    if (!loaded){
       notice.className = "notice";
-      notice.innerHTML = "Type a pallet to search.";
+      notice.innerHTML = `Click <strong>Load data</strong> first.`;
       return;
     }
 
-    const matches = findAllMatches(trimmed);
-    const dupCounts = countDuplicates(matches);
+    const q = normalize(input.value);
+
+    if (q.length < MIN_LEN){
+      notice.className = "notice";
+      notice.innerHTML =
+        `Type at least <strong>${MIN_LEN}</strong> characters to search. ` +
+        `<span style="color:var(--muted)">(${q.length}/${MIN_LEN})</span>`;
+      return;
+    }
+
+    const matches = findMatches(q);
+    const dups = duplicateCounts(matches);
+    const hasDup = [...dups.values()].some(v => v > 1);
 
     if (matches.length === 0){
       notice.className = "notice";
-      notice.innerHTML = `<strong>No match</strong> for “${escapeHtml(trimmed)}”.`;
+      notice.innerHTML = `<strong>No match</strong> for “${escapeHtml(q)}”.`;
       return;
     }
 
-    // If any duplicates exist among matches (same pallet value found > 1 times)
-    const hasDup = [...dupCounts.values()].some(v => v > 1);
-
     if (hasDup){
       notice.className = "notice danger";
-      notice.innerHTML = `<strong>Duplicate detected.</strong> The same pallet appears in multiple locations. Check results below.`;
+      notice.innerHTML = `<strong>Duplicate detected.</strong> The same pallet appears in multiple locations.`;
     } else {
       notice.className = "notice warn";
-      notice.innerHTML = `<strong>${matches.length}</strong> match(es) found for “${escapeHtml(trimmed)}”.`;
+      notice.innerHTML = `<strong>${matches.length}</strong> match(es) found for “${escapeHtml(q)}”.`;
     }
 
-    // Sort: duplicates first, then by column, then by row
-    matches.sort((a,b) => {
-      const da = dupCounts.get(a.pallet.toLowerCase()) || 0;
-      const db = dupCounts.get(b.pallet.toLowerCase()) || 0;
+    // Sort duplicates first
+    matches.sort((a,b)=>{
+      const da = dups.get(a.pallet.toLowerCase()) || 0;
+      const db = dups.get(b.pallet.toLowerCase()) || 0;
       if (da !== db) return db - da;
       if (a.columnHeader !== b.columnHeader) return a.columnHeader.localeCompare(b.columnHeader);
       return a.rowNumber - b.rowNumber;
     });
 
-    for (const m of matches.slice(0, 60)){
-      const dupN = dupCounts.get(m.pallet.toLowerCase()) || 0;
-      const item = document.createElement("div");
-      item.className = "item";
-      item.innerHTML = `
+    for (const m of matches.slice(0, 80)){
+      const dupN = dups.get(m.pallet.toLowerCase()) || 0;
+
+      const el = document.createElement("div");
+      el.className = "item";
+      el.innerHTML = `
         <div class="itemTop">
           <div class="pallet">${escapeHtml(m.pallet)}</div>
-          <div class="pill ${dupN > 1 ? "dupPill" : ""}">
+          <div class="pill ${dupN > 1 ? "dup" : ""}">
             ${dupN > 1 ? `Duplicate (${dupN})` : "Match"}
           </div>
         </div>
@@ -372,45 +441,54 @@
           <span><b>Sheet row:</b> ${m.rowNumber}</span>
         </div>
       `;
-      list.appendChild(item);
+      list.appendChild(el);
     }
 
-    if (matches.length > 60){
+    if (matches.length > 80){
       const more = document.createElement("div");
       more.className = "notice";
-      more.textContent = `Showing first 60 results. Narrow your search to see fewer matches.`;
+      more.textContent = `Showing first 80 results. Narrow your search to see fewer matches.`;
       list.appendChild(more);
     }
   }
 
-  function escapeHtml(str){
-    return String(str).replace(/[&<>"']/g, (m)=>({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[m]));
-  }
-
-  // Auto refresh every 5 seconds, and re-render after refresh
-  async function refreshLoop(){
+  // Events
+  loadBtn.addEventListener("click", async () => {
     try{
       await loadSheet();
-      render();
     }catch(e){
-      setStatus("bad", "Refresh failed");
+      setStatus("bad", "Load failed");
       notice.className = "notice danger";
       notice.innerHTML =
-        `<strong>Can’t load sheet.</strong> ${escapeHtml(e.message)}<br/>
-         If you opened this page as <b>file://</b>, use a local server (VS Code Live Server).`;
+        `<strong>Can’t load sheet.</strong> ${escapeHtml(e.message)}<br>` +
+        `Tip: open this page on <strong>http://localhost</strong> (VS Code Live Server).`;
     }
-  }
+  });
 
-  input.addEventListener("input", render);
-  refreshBtn.addEventListener("click", refreshLoop);
+  input.addEventListener("input", () => {
+    updateSearchButton();
+    // Don’t auto-search; UX is calmer. (User hits Enter or clicks Search.)
+    if (!loaded) return;
+    const q = normalize(input.value);
+    if (q.length < MIN_LEN){
+      list.innerHTML = "";
+      notice.className = "notice";
+      notice.innerHTML = `Type at least <strong>${MIN_LEN}</strong> characters to search. <span style="color:var(--muted)">(${q.length}/${MIN_LEN})</span>`;
+    }
+  });
 
-  // Start
-  (async () => {
-    await refreshLoop();
-    setInterval(refreshLoop, 5000);
-  })();
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter"){
+      e.preventDefault();
+      if (!searchBtn.disabled) render();
+    }
+  });
+
+  searchBtn.addEventListener("click", render);
+
+  // Initial state
+  setStatus("wait", "Not loaded");
+  updateSearchButton();
 </script>
 </body>
 </html>
